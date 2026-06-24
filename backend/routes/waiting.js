@@ -34,6 +34,12 @@ router.patch('/:id/admit', authMiddleware, async (req, res) => {
         });
     }
 
+    if (!existing.zoom_meeting_id) {
+        return res.status(400).json({
+            message: "Room has no active meeting. Open the room first.",
+        });
+    }
+
     db.prepare(`
         INSERT INTO room_sessions (id, room_id, student_id, status)
         VALUES (?, ?, ?, 'active');

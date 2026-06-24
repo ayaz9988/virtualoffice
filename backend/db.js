@@ -42,6 +42,9 @@ try {
   `);
 } catch {}
 
+try { db.exec(`DROP INDEX IF EXISTS sqlite_autoindex_rooms_1`); } catch {}
+try { db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_rooms_active_teacher ON rooms(teacher_id) WHERE deleted_at IS NULL`); } catch {}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS waiting_entries (
     id TEXT PRIMARY KEY,

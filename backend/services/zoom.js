@@ -41,14 +41,19 @@ export const getAccessToken = async () => {
 
 
 export const createMeeting = async (teacherName, topic = 'office') => {
-    const body = { 
+    const body = {
         topic,
-        type: 1,
+        type: 2,
+        start_time: new Date().toISOString(),
+        duration: 40,
+        timezone: 'Asia/Riyadh',
         settings: {
-            host_video: true,
-            participant_video: true,
-            join_before_host: false,
-            waiting_room: true
+            waiting_room: false,
+            host_video: false,
+            participant_video: false,
+            approval_type: 2,
+            auto_recording: 'cloud',
+            join_before_host: false
         }
     };
     if (!access_token || isTokenExpired(access_token)) {
@@ -78,17 +83,27 @@ export const deleteMeeting = async (meetingId) => {
 };
 
 
+export const getZakToken = async (userId = 'me') => {
+  if (!access_token || isTokenExpired(access_token)) {
+    await getAccessToken();
+  }
+  const res = await axios.get(`https://api.zoom.us/v2/users/${userId}/token?type=zak`, {
+    headers: { Authorization: `Bearer ${access_token}` },
+  });
+  return res.data.token;
+};
+
 export const generateSignature = (meetingNumber, role) => {
   const iat = Math.round(Date.now() / 1000);
-  const exp = iat + 20; // expires in 20 seconds
+  const exp = iat + 7200;
 
   const payload = {
     appKey: process.env.ZOOM_CLIENT_ID,
-    role: role,       // 0 = attendee, 1 = host
-    version: 1,
+    mn: String(meetingNumber),
+    role,
     iat,
     exp,
-    meetingNumber: Number(meetingNumber),
+    tokenExp: exp,
   };
 
   return jwt.sign(payload, process.env.ZOOM_CLIENT_SECRET);

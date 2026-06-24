@@ -47,21 +47,45 @@ router.post('/', authMiddleware, async (req, res) => {
         });
     }
 
-    const zoomMeetingData = await createMeeting(user.name);
-    const id = randomUUID();
-    const createRoom =  db.prepare(`
-        INSERT INTO rooms (id, teacher_id, name, topic, zoom_meeting_id, zoom_password, zoom_start_url, zoom_join_url, is_open)
-        VALUES (?, ?, ?, 'office', ?, ?, ?, ?, 1);
-    `).run(id,user.id, user.name, zoomMeetingData.id, zoomMeetingData.password, zoomMeetingData.start_url, zoomMeetingData.join_url);
-    const createdRoom = db.prepare(`
-        SELECT id, name, description, topic, zoom_meeting_id, zoom_password, zoom_start_url, zoom_join_url, is_open
-        FROM rooms WHERE id = ?;
-    `).get(id);
+    const existing = db.prepare(`
+        SELECT id, deleted_at FROM rooms WHERE teacher_id = ?
+    `).get(user.id);
 
-    res.status(201).json({
-        message: "created room successfully",
-        room: createdRoom,
-    })
+    if (existing && !existing.deleted_at) {
+        return res.status(409).json({ message: 'You already have an active room' });
+    }
+
+    const zoomMeetingData = await createMeeting(user.name);
+
+    if (existing && existing.deleted_at) {
+        db.prepare(`
+            UPDATE rooms SET
+                name = ?, description = NULL, topic = 'office', deleted_at = NULL,
+                zoom_meeting_id = ?, zoom_password = ?, zoom_start_url = ?,
+                zoom_join_url = ?, is_open = 1, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `).run(user.name, zoomMeetingData.id, zoomMeetingData.password, zoomMeetingData.start_url, zoomMeetingData.join_url, existing.id);
+
+        const room = db.prepare(`
+            SELECT id, name, description, topic, zoom_meeting_id, zoom_password, zoom_start_url, zoom_join_url, is_open
+            FROM rooms WHERE id = ?
+        `).get(existing.id);
+
+        res.status(200).json({ message: "room reactivated successfully", room });
+    } else {
+        const id = randomUUID();
+        db.prepare(`
+            INSERT INTO rooms (id, teacher_id, name, topic, zoom_meeting_id, zoom_password, zoom_start_url, zoom_join_url, is_open)
+            VALUES (?, ?, ?, 'office', ?, ?, ?, ?, 1);
+        `).run(id, user.id, user.name, zoomMeetingData.id, zoomMeetingData.password, zoomMeetingData.start_url, zoomMeetingData.join_url);
+
+        const room = db.prepare(`
+            SELECT id, name, description, topic, zoom_meeting_id, zoom_password, zoom_start_url, zoom_join_url, is_open
+            FROM rooms WHERE id = ?
+        `).get(id);
+
+        res.status(201).json({ message: "created room successfully", room });
+    }
 });
 
 router.patch('/:id', authMiddleware, async(req, res) => {
@@ -90,8 +114,10 @@ router.patch('/:id', authMiddleware, async(req, res) => {
                     zoom_join_url = ?, zoom_start_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
                 ).run(meeting.id, meeting.password, meeting.join_url, meeting.start_url, id);
         } else {
-            await deleteMeeting(room.zoom_meeting_id);
-            db.prepare(`UPDATE rooms SET is_open = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(id);
+            try { await deleteMeeting(room.zoom_meeting_id); } catch {}
+            db.prepare(`UPDATE rooms SET is_open = 0, zoom_meeting_id = NULL, zoom_password = NULL,
+                    zoom_join_url = NULL, zoom_start_url = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+                ).run(id);
         }
     }
 
@@ -125,7 +151,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         });
     }
 
-    await deleteMeeting(room.zoom_meeting_id);
+    try { await deleteMeeting(room.zoom_meeting_id); } catch {}
 
     db.prepare(`
        UPDATE rooms SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?; 

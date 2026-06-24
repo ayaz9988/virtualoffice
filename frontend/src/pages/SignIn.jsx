@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { login } from '../api';
 import { useAuth } from '../store/auth';
 
@@ -43,7 +44,7 @@ export default function SignIn() {
           Sign In
         </button>
         <p className="text-gray-400 text-sm mt-4 text-center">
-          Don&apos;t have an account? <a href="/signup" className="text-blue-400 hover:underline">Sign Up</a>
+          Don&apos;t have an account? <Link to="/signup" className="text-blue-400 hover:underline">Sign Up</Link>
         </p>
       </form>
     </div>
