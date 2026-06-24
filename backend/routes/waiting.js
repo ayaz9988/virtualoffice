@@ -110,7 +110,7 @@ router.get('/mine', authMiddleware, async (req, res) => {
 
     const entry = db.prepare(`
         SELECT we.id, we.status, we.created_at AS waiting_since,
-               r.zoom_meeting_id, r.zoom_password
+               r.zoom_meeting_id, r.zoom_password, r.zoom_join_url
         FROM waiting_entries we
         JOIN rooms r ON we.room_id = r.id
         WHERE we.student_id = ? AND we.room_id = ?

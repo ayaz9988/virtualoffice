@@ -78,7 +78,3 @@ export function getMyWaitingStatus(roomId) {
   return request('GET', `/waiting/mine?room_id=${roomId}`);
 }
 
-// Zoom
-export function getZoomSignature(meetingNumber, role) {
-  return request('GET', `/zoom/signature?meetingNumber=${meetingNumber}&role=${role}`);
-}

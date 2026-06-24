@@ -152,17 +152,6 @@ export default function TeacherRoom() {
                       Desktop App
                     </a>
                   )}
-                  {room.is_open && room.zoom_meeting_id && (
-                    <button
-                      onClick={() => window.open(
-                        `/meeting/${room.id}?meetingNumber=${room.zoom_meeting_id}&password=${room.zoom_password}&role=1`,
-                        '_blank'
-                      )}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition"
-                    >
-                      Join in Browser
-                    </button>
-                  )}
                   <button
                     onClick={handleToggle}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition ${

@@ -43,17 +43,14 @@ export const getAccessToken = async () => {
 export const createMeeting = async (teacherName, topic = 'office') => {
     const body = {
         topic,
-        type: 2,
-        start_time: new Date().toISOString(),
-        duration: 40,
-        timezone: 'Asia/Riyadh',
+        type: 1,
         settings: {
             waiting_room: false,
             host_video: false,
             participant_video: false,
             approval_type: 2,
             auto_recording: 'cloud',
-            join_before_host: false
+            join_before_host: true
         }
     };
     if (!access_token || isTokenExpired(access_token)) {

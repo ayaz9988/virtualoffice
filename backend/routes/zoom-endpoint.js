@@ -20,7 +20,11 @@ router.get('/signature', authMiddleware, async (req, res) => {
     const result = { signature };
 
     if (role === 1) {
-      result.zak = await getZakToken();
+      try {
+        result.zak = await getZakToken();
+      } catch {
+        // ZAK token is optional; proceed without it
+      }
     }
 
     res.status(200).json(result);

@@ -5,7 +5,6 @@ import Dashboard from './pages/Dashboard';
 import TeacherRoom from './pages/TeacherRoom';
 import StudentBrowse from './pages/StudentBrowse';
 import WaitingRoom from './pages/WaitingRoom';
-import ZoomMeeting from './pages/ZoomMeeting';
 import { useAuth } from './store/auth';
 
 function ProtectedRoute({ children }) {
@@ -25,7 +24,6 @@ function App() {
         <Route path="/room" element={<ProtectedRoute><TeacherRoom /></ProtectedRoute>} />
         <Route path="/browse" element={<ProtectedRoute><StudentBrowse /></ProtectedRoute>} />
         <Route path="/waiting/:roomId" element={<ProtectedRoute><WaitingRoom /></ProtectedRoute>} />
-        <Route path="/meeting/:roomId" element={<ProtectedRoute><ZoomMeeting /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to={token ? '/dashboard' : '/signin'} replace />} />
       </Routes>
     </BrowserRouter>
