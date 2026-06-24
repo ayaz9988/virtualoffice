@@ -6,6 +6,7 @@ import logger from './logger.js';
 import authRoutes from './routes/auth.js';
 import roomsRouter from './routes/rooms.js';
 import waitingRouter from './routes/waiting.js';
+import zoomRouter from './routes/zoom-endpoint.js'
 import errorHandler from './middleware/errorHandler.js';
 import 'express-async-errors';
 
@@ -27,6 +28,7 @@ app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) }
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomsRouter);
 app.use('/api/waiting', waitingRouter);
+app.use('/api/zoom', zoomRouter);
 
 app.post('/api/log', (req, res) => {
   const { level, message, meta } = req.body;

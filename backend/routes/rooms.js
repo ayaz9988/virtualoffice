@@ -6,7 +6,7 @@ import {randomUUID} from 'node:crypto';
 
 const router = Router();
 
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
     const openRooms = db.prepare(`
         SELECT
             id, name, description, topic, zoom_meeting_id, zoom_password, zoom_start_url, zoom_join_url
@@ -141,6 +141,85 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
 
     res.status(204).end();
+});
+
+
+router.post('/:id/wait', authMiddleware, async (req, res) => {
+    const { note } = req.body;
+    const id = req.params.id;
+    const user = req.user;
+    if(user?.role !== 'student') {
+        return res.status(401).json({
+            message: 'Invalid user role',
+        });
+    }
+
+    const room = db.prepare(`
+        SELECT id from rooms WHERE id = ? AND is_open = 1 AND deleted_at IS NULL; 
+    `).get(id);
+
+    if (!room) return res.status(404).json({ message: 'Room not found or not open' });
+    
+    const existing = db.prepare(`
+        SELECT id
+        FROM waiting_entries
+        WHERE student_id = ? AND room_id = ? AND status =  'waiting';    
+    `).get(user.id, id);
+
+    if(existing) {
+        return res.status(409).json({
+            message: `student ${user.name} already waiting on this room`,
+        });
+    }
+
+    const randID = randomUUID();
+    db.prepare(`
+        INSERT INTO waiting_entries (id, room_id, student_id, status, note)
+        VALUES (?, ?, ?, 'waiting', ?)
+    `).run(randID, room.id, user.id, note ?? '')
+
+    const waiting_entry = db.prepare(`
+        SELECT id, room_id, student_id, status, note, created_at
+        FROM waiting_entries
+        WHERE id = ?;
+    `).get(randID);
+
+    res.status(201).json({
+        waiting_entry,
+    });
+});
+
+
+router.get("/:id/waiting", authMiddleware, async (req, res) => {
+    const id = req.params.id;
+    const user = req.user;
+    if(user?.role !== 'teacher') {
+        return res.status(401).json({
+            message: 'Invalid user role',
+        });
+    }
+    const room = db.prepare(`
+        SELECT id, zoom_meeting_id, teacher_id from rooms WHERE id = ?; 
+    `).get(id);
+
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+    if(room.teacher_id !== user.id) {
+        return res.status(403).json({
+            message: "This room is not accessible by you",
+        });
+    }
+
+    const listOfWaitingStudent = db.prepare(`
+       SELECT
+            we.id, we.student_id, u.name AS student_name, u.email AS student_email,
+            we.note, we.created_at AS waiting_since
+        FROM waiting_entries we
+        JOIN users u ON we.student_id = u.id
+        WHERE room_id = ? AND status = 'waiting'
+        ORDER BY we.created_at ASC;
+    `).all(id);
+
+    res.status(200).json({ listOfWaitingStudent });
 });
 
 export default router;
