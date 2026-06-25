@@ -3,6 +3,7 @@ import { authMiddleware } from "../middleware/auth.js";
 import { generateSignature } from "../services/zoom.js";
 import { randomUUID } from "node:crypto";
 import db from "../db.js";
+import { sendToTeacher, sendToUser } from "../services/sse.js";
 
 const router = Router();
 
@@ -51,14 +52,17 @@ router.patch('/:id/admit', authMiddleware, async (req, res) => {
         WHERE id = ?;
     `).run(id);
 
-
     const signature = generateSignature(existing.zoom_meeting_id, 0)
-    res.status(200).json({
+    const data = {
         signature,
         meeting_number: existing.zoom_meeting_id,
         zoom_password: existing.zoom_password,
         student_id: existing.student_id,
-    });
+    }
+
+    sendToUser(existing.student_id, 'status-changed', data);
+    sendToTeacher(existing.room_id, 'waiting-queue-changed', data);
+    res.status(200).json(data);
 });
 
 router.patch('/:id/decline', authMiddleware, async (req, res) => {
@@ -95,9 +99,12 @@ router.patch('/:id/decline', authMiddleware, async (req, res) => {
         WHERE id = ?;    
     `).run(id);
 
-    res.status(200).json({
+    const data = {
         message: `The student got declined successfully`,
-    });
+    }
+    sendToUser(existing.student_id, 'status-changed', data);
+    sendToTeacher(existing.room_id, 'waiting-queue-changed', data);
+    res.status(200).json(data);
 });
 
 router.get('/mine', authMiddleware, async (req, res) => {

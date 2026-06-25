@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getMyWaitingStatus } from '../api';
+import { subscribeToEvents } from '../api';
 
 export default function WaitingRoom() {
   const { roomId } = useParams();
@@ -8,30 +8,23 @@ export default function WaitingRoom() {
   const [status, setStatus] = useState('waiting');
 
   useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const data = await getMyWaitingStatus(roomId);
-        const entry = data.entry;
+    const source = subscribeToEvents();
 
-        if (entry.status === 'admitted') {
-          clearInterval(interval);
-          if (!entry.zoom_join_url) {
-            setStatus('declined');
-            return;
-          }
-          window.open(entry.zoom_join_url, '_blank');
-          setStatus('admitted');
-        } else if (entry.status === 'declined') {
-          clearInterval(interval);
-          setStatus('declined');
+    source.addEventListener('status-changed', (e) => {
+      const data = JSON.parse(e.data);
+      if (data.meeting_number || data.status === 'admitted') {
+        setStatus('admitted');
+        if (data.meeting_number) {
+          const joinUrl = data.zoom_join_url || `https://zoom.us/j/${data.meeting_number}`;
+          window.open(joinUrl, '_blank');
         }
-      } catch {
-        // room might not exist anymore
+      } else {
+        setStatus('declined');
       }
-    }, 3000);
+    });
 
-    return () => clearInterval(interval);
-  }, [roomId, navigate]);
+    return () => source.close();
+  }, [roomId]);
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center">

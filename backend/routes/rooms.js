@@ -3,6 +3,7 @@ import {authMiddleware} from './../middleware/auth.js';
 import db from './../db.js';
 import { createMeeting, deleteMeeting } from './../services/zoom.js';
 import {randomUUID} from 'node:crypto';
+import { sendToTeacher } from "../services/sse.js";
 
 const router = Router();
 
@@ -209,6 +210,8 @@ router.post('/:id/wait', authMiddleware, async (req, res) => {
         FROM waiting_entries
         WHERE id = ?;
     `).get(randID);
+
+    sendToTeacher(id, 'waiting-queue-changed', waiting_entry);
 
     res.status(201).json({
         waiting_entry,

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyRoom, createRoom, updateRoom, deleteRoom, getWaitingQueue, admitStudent, declineStudent } from '../api';
+import { getMyRoom, createRoom, updateRoom, deleteRoom, getWaitingQueue, admitStudent, declineStudent, subscribeToEvents } from '../api';
 import { useAuth } from '../store/auth';
 
 export default function TeacherRoom() {
@@ -23,7 +23,8 @@ export default function TeacherRoom() {
   useEffect(() => {
     if (!room) return;
     let cancelled = false;
-    const fn = async () => {
+
+    const fetchQueue = async () => {
       try {
         const data = await getWaitingQueue(room.id);
         if (!cancelled) setQueue(data.listOfWaitingStudent);
@@ -31,11 +32,15 @@ export default function TeacherRoom() {
         if (!cancelled) setQueue([]);
       }
     };
-    fn();
-    const interval = setInterval(fn, 3000);
+
+    fetchQueue();
+
+    const source = subscribeToEvents();
+    source.addEventListener('waiting-queue-changed', fetchQueue);
+
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      source.close();
     };
   }, [room]);
 

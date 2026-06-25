@@ -45,12 +45,12 @@ export const createMeeting = async (teacherName, topic = 'office') => {
         topic,
         type: 1,
         settings: {
-            waiting_room: false,
+            waiting_room: true,
             host_video: false,
             participant_video: false,
             approval_type: 2,
             auto_recording: 'cloud',
-            join_before_host: true
+            join_before_host: false
         }
     };
     if (!access_token || isTokenExpired(access_token)) {
@@ -95,7 +95,7 @@ export const generateSignature = (meetingNumber, role) => {
   const exp = iat + 7200;
 
   const payload = {
-    appKey: process.env.ZOOM_CLIENT_ID,
+    appKey: process.env.ZOOM_SDK_KEY,
     mn: String(meetingNumber),
     role,
     iat,
@@ -103,5 +103,5 @@ export const generateSignature = (meetingNumber, role) => {
     tokenExp: exp,
   };
 
-  return jwt.sign(payload, process.env.ZOOM_CLIENT_SECRET);
+  return jwt.sign(payload, process.env.ZOOM_SDK_SECRET);
 };

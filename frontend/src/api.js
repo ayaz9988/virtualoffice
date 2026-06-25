@@ -78,3 +78,19 @@ export function getMyWaitingStatus(roomId) {
   return request('GET', `/waiting/mine?room_id=${roomId}`);
 }
 
+// SSE
+export function subscribeToEvents() {
+  const token = useAuth.getState().token;
+  const source = new EventSource(`${API}/events?token=${token}`);
+
+  source.addEventListener('connected', () => {
+    logger.info('SSE connected');
+  });
+
+  source.addEventListener('error', (err) => {
+    logger.error('SSE error', err);
+  });
+
+  return source;
+}
+
