@@ -18,7 +18,7 @@ router.patch('/:id/admit', authMiddleware, async (req, res) => {
 
     const existing = db.prepare(`
         SELECT we.id, we.student_id, we.status, we.room_id,
-            r.teacher_id, r.zoom_meeting_id, r.zoom_password
+            r.teacher_id, r.zoom_meeting_id, r.zoom_password, r.zoom_join_url
         FROM waiting_entries we
         JOIN rooms r ON we.room_id = r.id
         WHERE we.id = ?
@@ -60,6 +60,7 @@ router.patch('/:id/admit', authMiddleware, async (req, res) => {
         signature,
         meeting_number: existing.zoom_meeting_id,
         zoom_password: existing.zoom_password,
+        zoom_join_url: existing.zoom_join_url,
         student_id: existing.student_id,
     }
 

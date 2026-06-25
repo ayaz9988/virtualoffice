@@ -15,7 +15,7 @@ export default function WaitingRoom() {
       if (data.meeting_number || data.status === 'admitted') {
         setStatus('admitted');
         if (data.meeting_number) {
-          const joinUrl = data.zoom_join_url || `https://zoom.us/j/${data.meeting_number}`;
+          const joinUrl = data.zoom_join_url || `https://zoom.us/j/${data.meeting_number}?pwd=${data.zoom_password}`;
           window.open(joinUrl, '_blank');
         }
       } else {
