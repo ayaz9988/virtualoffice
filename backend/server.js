@@ -13,10 +13,14 @@ import eventRouter from './routes/events.js';
 import errorHandler from './middleware/errorHandler.js';
 import 'express-async-errors';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const port = process.env.PORT || 4000;
 
-if (!fs.existsSync('logs')) fs.mkdirSync('logs');
+const logsDir = path.join(__dirname, 'logs');
+if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir);
 
 app.use((_req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
