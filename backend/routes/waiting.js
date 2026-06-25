@@ -52,7 +52,10 @@ router.patch('/:id/admit', authMiddleware, async (req, res) => {
         WHERE id = ?;
     `).run(id);
 
-    const signature = generateSignature(existing.zoom_meeting_id, 0)
+    const signature = generateSignature(existing.zoom_meeting_id, 0);
+    if (signature.error) {
+        return res.status(500).json({ message: 'Failed to generate Zoom signature', details: signature.error });
+    }
     const data = {
         signature,
         meeting_number: existing.zoom_meeting_id,

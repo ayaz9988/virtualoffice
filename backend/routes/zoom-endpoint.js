@@ -17,13 +17,17 @@ router.get('/signature', authMiddleware, async (req, res) => {
     }
 
     const signature = generateSignature(meetingNumber, role);
+    if (signature.error) {
+        return res.status(500).json({ error: 'Failed to generate Zoom signature', details: signature.error });
+    }
     const result = { signature };
 
     if (role === 1) {
-      try {
-        result.zak = await getZakToken();
-      } catch {
+      const zak = await getZakToken();
+      if (zak.error) {
         // ZAK token is optional; proceed without it
+      } else {
+        result.zak = zak;
       }
     }
 

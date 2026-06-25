@@ -57,6 +57,9 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 
     const zoomMeetingData = await createMeeting(user.name);
+    if (zoomMeetingData.error) {
+        return res.status(500).json({ message: 'Failed to create Zoom meeting', details: zoomMeetingData.error });
+    }
 
     if (existing && existing.deleted_at) {
         db.prepare(`
@@ -111,11 +114,17 @@ router.patch('/:id', authMiddleware, async(req, res) => {
     if (is_open !== undefined && is_open !== room.is_open) {
         if (is_open === 1) {
             const meeting = await createMeeting(user.name, topic || room.topic);
+            if (meeting.error) {
+                return res.status(500).json({ message: 'Failed to create Zoom meeting', details: meeting.error });
+            }
             db.prepare(`UPDATE rooms SET is_open = 1, zoom_meeting_id = ?, zoom_password = ?,
                     zoom_join_url = ?, zoom_start_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
                 ).run(meeting.id, meeting.password, meeting.join_url, meeting.start_url, id);
         } else {
-            try { await deleteMeeting(room.zoom_meeting_id); } catch {}
+            const deleteResult = await deleteMeeting(room.zoom_meeting_id);
+            if (deleteResult.error) {
+                console.error('Failed to delete Zoom meeting:', deleteResult.error);
+            }
             db.prepare(`UPDATE rooms SET is_open = 0, zoom_meeting_id = NULL, zoom_password = NULL,
                     zoom_join_url = NULL, zoom_start_url = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
                 ).run(id);
@@ -152,7 +161,10 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         });
     }
 
-    try { await deleteMeeting(room.zoom_meeting_id); } catch {}
+    const deleteResult = await deleteMeeting(room.zoom_meeting_id);
+    if (deleteResult.error) {
+        console.error('Failed to delete Zoom meeting:', deleteResult.error);
+    }
 
     db.prepare(`
        UPDATE rooms SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?; 
