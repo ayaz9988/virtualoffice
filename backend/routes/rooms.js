@@ -3,7 +3,7 @@ import {authMiddleware} from './../middleware/auth.js';
 import db from './../db.js';
 import { createMeeting, deleteMeeting } from './../services/zoom.js';
 import {randomUUID} from 'node:crypto';
-import { sendToTeacher } from "../services/sse.js";
+import { sendToTeacher, broadcast } from "../services/sse.js";
 
 const router = Router();
 
@@ -75,6 +75,7 @@ router.post('/', authMiddleware, async (req, res) => {
             FROM rooms WHERE id = ?
         `).get(existing.id);
 
+        broadcast('rooms-changed', {});
         res.status(200).json({ message: "room reactivated successfully", room });
     } else {
         const id = randomUUID();
@@ -88,6 +89,7 @@ router.post('/', authMiddleware, async (req, res) => {
             FROM rooms WHERE id = ?
         `).get(id);
 
+        broadcast('rooms-changed', {});
         res.status(201).json({ message: "created room successfully", room });
     }
 });
@@ -138,6 +140,11 @@ router.patch('/:id', authMiddleware, async(req, res) => {
     }
 
     const updated = db.prepare('SELECT id, name, description, topic, zoom_meeting_id, zoom_password, zoom_start_url, zoom_join_url, is_open FROM rooms WHERE id = ?').get(id);
+
+    if (is_open !== undefined && is_open !== room.is_open) {
+        broadcast('rooms-changed', {});
+    }
+
     res.json({ room: updated });
 });
 
@@ -178,6 +185,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
        UPDATE room_sessions SET status = 'ended', left_at = CURRENT_TIMESTAMP WHERE room_id = ? AND status = 'active';
     `).run(id);
 
+    broadcast('rooms-changed', {});
 
     res.status(204).end();
 });

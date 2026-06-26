@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getOpenRooms, joinWaitingRoom } from '../api';
+import { getOpenRooms, joinWaitingRoom, subscribeToEvents } from '../api';
 import { useAuth } from '../store/auth';
 
 export default function StudentBrowse() {
@@ -9,9 +9,23 @@ export default function StudentBrowse() {
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const fetchRooms = useCallback(() => {
     getOpenRooms().then((data) => setRooms(data.rooms)).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    fetchRooms();
+  }, [fetchRooms]);
+
+  useEffect(() => {
+    const source = subscribeToEvents();
+
+    source.addEventListener('rooms-changed', () => {
+      fetchRooms();
+    });
+
+    return () => source.close();
+  }, [fetchRooms]);
 
   const handleJoin = async (roomId) => {
     try {
