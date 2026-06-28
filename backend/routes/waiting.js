@@ -4,10 +4,11 @@ import { generateSignature } from "../services/zoom.js";
 import { randomUUID } from "node:crypto";
 import db from "../db.js";
 import { sendToTeacher, sendToUser } from "../services/sse.js";
+import { validateWaitingEntryParam, validateWaitingMine } from "../middleware/validate.js";
 
 const router = Router();
 
-router.patch('/:id/admit', authMiddleware, async (req, res) => {
+router.patch('/:id/admit', authMiddleware, validateWaitingEntryParam, async (req, res) => {
     const id = req.params.id;
     const user = req.user;
     if(user?.role !== 'teacher') {
@@ -69,7 +70,7 @@ router.patch('/:id/admit', authMiddleware, async (req, res) => {
     res.status(200).json(data);
 });
 
-router.patch('/:id/decline', authMiddleware, async (req, res) => {
+router.patch('/:id/decline', authMiddleware, validateWaitingEntryParam, async (req, res) => {
     const id = req.params.id;
     const user = req.user;
     if(user?.role !== 'teacher') {
@@ -111,7 +112,7 @@ router.patch('/:id/decline', authMiddleware, async (req, res) => {
     res.status(200).json(data);
 });
 
-router.get('/mine', authMiddleware, async (req, res) => {
+router.get('/mine', authMiddleware, validateWaitingMine, async (req, res) => {
     const { room_id } = req.query;
     const user = req.user;
 

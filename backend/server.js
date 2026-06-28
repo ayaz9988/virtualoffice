@@ -46,8 +46,6 @@ app.post('/api/log', (req, res) => {
   res.status(200).end();
 });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const distPath = path.join(__dirname, '..', 'frontend', 'dist');
 
 if (fs.existsSync(distPath)) {

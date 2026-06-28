@@ -1,20 +1,13 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/auth.js";
 import { generateSignature, getZakToken } from "../services/zoom.js";
+import { validateZoomSignature } from "../middleware/validate.js";
 
 const router = Router();
 
-router.get('/signature', authMiddleware, async (req, res) => {
+router.get('/signature', authMiddleware, validateZoomSignature, async (req, res) => {
     const meetingNumber = Number(req.query.meetingNumber);
     const role = Number(req.query.role);
-
-    if (!Number.isInteger(meetingNumber) || !Number.isInteger(role)) {
-    return res.status(400).json({ error: 'meetingNumber and role must be integers' });
-    }
-
-    if (![0, 1].includes(role)) {
-    return res.status(400).json({ error: 'role must be 0 (attendee) or 1 (host)' });
-    }
 
     const signature = generateSignature(meetingNumber, role);
     if (signature.error) {

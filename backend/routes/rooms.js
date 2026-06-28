@@ -4,6 +4,7 @@ import db from './../db.js';
 import { createMeeting, deleteMeeting } from './../services/zoom.js';
 import {randomUUID} from 'node:crypto';
 import { sendToTeacher, broadcast } from "../services/sse.js";
+import { validateUpdateRoom, validateRoomParam, validateWaitNote } from "../middleware/validate.js";
 
 const router = Router();
 
@@ -94,7 +95,7 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
-router.patch('/:id', authMiddleware, async(req, res) => {
+router.patch('/:id', authMiddleware, validateUpdateRoom, async(req, res) => {
     const { name, description, topic, is_open } = req.body;
     const id = req.params.id;
     const user = req.user;
@@ -191,7 +192,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 });
 
 
-router.post('/:id/wait', authMiddleware, async (req, res) => {
+router.post('/:id/wait', authMiddleware, validateWaitNote, async (req, res) => {
     const { note } = req.body;
     const id = req.params.id;
     const user = req.user;
@@ -239,7 +240,7 @@ router.post('/:id/wait', authMiddleware, async (req, res) => {
 });
 
 
-router.get("/:id/waiting", authMiddleware, async (req, res) => {
+router.get("/:id/waiting", authMiddleware, validateRoomParam, async (req, res) => {
     const id = req.params.id;
     const user = req.user;
     if(user?.role !== 'teacher') {

@@ -4,15 +4,12 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from '../db.js';
 import { authMiddleware, JWT_SECRET } from '../middleware/auth.js';
+import { validateRegister, validateLogin } from '../middleware/validate.js';
 
 const router = Router();
 
-router.post('/register', (req, res) => {
+router.post('/register', validateRegister, (req, res) => {
   const { name, email, password, role } = req.body;
-
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: 'Name, email, and password are required' });
-  }
 
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
   if (existing) {
@@ -28,12 +25,8 @@ router.post('/register', (req, res) => {
   res.status(201).json({ token, user: { id, name, email, role: role || 'student' } });
 });
 
-router.post('/login', (req, res) => {
+router.post('/login', validateLogin, (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
 
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
   if (!user) {
