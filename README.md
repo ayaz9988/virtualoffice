@@ -15,7 +15,7 @@ A full-stack web application for virtual office hours and classroom sessions, in
 | Layer    | Technology                                      |
 | -------- | ----------------------------------------------- |
 | Frontend | React 18, Vite, Tailwind CSS, Zustand, React Router |
-| Backend  | Express.js, SQLite (better-sqlite3), JWT auth, SSE  |
+| Backend  | Express.js, SQLite (better-sqlite3), JWT auth, SSE, express-validator |
 | Video    | Zoom Meetings SDK, Zoom API                    |
 
 ## Project Structure
@@ -33,6 +33,7 @@ virtualoffice/
       zoom.js         # Zoom API integration
     middleware/
       auth.js         # JWT authentication (header or query param)
+      validate.js     # Request input validation (express-validator)
 ```
 
 ## Getting Started
@@ -86,6 +87,17 @@ npm run start
 Starts the backend server. Serve the frontend from `frontend/dist/` or configure the backend to serve static files.
 
 ## Architecture
+
+### Input Validation
+
+All endpoint inputs are validated using **express-validator** middleware:
+
+- **Auth** — `POST /register` (name, email format, password min 6, role enum), `POST /login` (email, password)
+- **Rooms** — `PATCH /:id` (room ID, topic enum, is_open 0/1), `POST /:id/wait` (note max 500 chars), `GET /:id/waiting` (room ID)
+- **Waiting** — `PATCH /:id/admit`, `PATCH /:id/decline` (entry ID), `GET /mine` (room_id required)
+- **Zoom** — `GET /signature` (meetingNumber int, role 0/1)
+
+Validation rules are centralized in `middleware/validate.js` and return `400` with the first error message on failure.
 
 ### Real-time via SSE
 
