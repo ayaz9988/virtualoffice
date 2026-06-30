@@ -9,12 +9,15 @@ A full-stack web application for virtual office hours and classroom sessions, in
 - **Zoom integration**: Automatic meeting creation, SDK signature generation, and join URL handling
 - **Real-time updates**: Server-Sent Events (SSE) for instant queue and status updates
 - **Zoom waiting room**: Students wait in Zoom's built-in waiting room until the host lets them in
+- **Dark/Light theme**: Toggle between dark and light modes with persistent preference
+- **Magenta accent**: Custom magenta color palette across all interactive elements
+- **Loading states**: Spinner animations on all API-calling buttons for better UX
 
 ## Tech Stack
 
 | Layer    | Technology                                      |
 | -------- | ----------------------------------------------- |
-| Frontend | React 18, Vite, Tailwind CSS, Zustand, React Router |
+| Frontend | React 18, Vite, Chakra UI v3, Zustand, React Router |
 | Backend  | Express.js, SQLite (better-sqlite3), JWT auth, SSE, express-validator |
 | Video    | Zoom Meetings SDK, Zoom API                    |
 
@@ -23,6 +26,12 @@ A full-stack web application for virtual office hours and classroom sessions, in
 ```
 virtualoffice/
   frontend/           # React SPA (Vite)
+    src/
+      hooks/
+        useColorMode.js  # Dark/light theme hook with localStorage persistence
+      pages/
+      store/
+      theme.js           # Chakra UI theme config (magenta accent tokens)
   backend/            # Express API server (SQLite)
     routes/
       events.js       # SSE endpoint

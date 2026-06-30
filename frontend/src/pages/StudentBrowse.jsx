@@ -2,12 +2,39 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getOpenRooms, joinWaitingRoom, subscribeToEvents } from '../api';
 import { useAuth } from '../store/auth';
+import { useColorMode } from '../hooks/useColorMode';
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  IconButton,
+  Stack,
+  Text,
+  VStack,
+} from '@chakra-ui/react';
+
+function ThemeToggle() {
+  const { mode, toggleColorMode } = useColorMode();
+  return (
+    <IconButton
+      aria-label="Toggle theme"
+      variant="ghost"
+      size="sm"
+      onClick={toggleColorMode}
+    >
+      {mode === 'dark' ? '☀️' : '🌙'}
+    </IconButton>
+  );
+}
 
 export default function StudentBrowse() {
   const navigate = useNavigate();
   const user = useAuth((s) => s.user);
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState('');
+  const [joiningIds, setJoiningIds] = useState(new Set());
 
   const fetchRooms = useCallback(() => {
     getOpenRooms().then((data) => setRooms(data.rooms)).catch(() => {});
@@ -28,46 +55,68 @@ export default function StudentBrowse() {
   }, [fetchRooms]);
 
   const handleJoin = async (roomId) => {
+    setJoiningIds((prev) => new Set(prev).add(roomId));
     try {
       await joinWaitingRoom(roomId);
       navigate(`/waiting/${roomId}`);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setJoiningIds((prev) => {
+        const next = new Set(prev);
+        next.delete(roomId);
+        return next;
+      });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-white">Open Rooms</h1>
-          <span className="text-gray-400">Welcome, {user?.name}</span>
-        </div>
+    <Box minH="100vh" bg="bg.muted" p={6}>
+      <VStack maxW="3xl" mx="auto" align="stretch" gap={6}>
+        <Flex justify="space-between" align="center">
+          <Heading size="lg">Open Rooms</Heading>
+          <HStack gap={4}>
+            <Text color="fg.muted">Welcome, {user?.name}</Text>
+            <ThemeToggle />
+          </HStack>
+        </Flex>
 
-        {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+        {error && (
+          <Text color="red.400" fontSize="sm">{error}</Text>
+        )}
 
         {rooms.length === 0 ? (
-          <p className="text-gray-500 text-center mt-20">No open rooms right now</p>
+          <VStack py={20} gap={3}>
+            <Text color="fg.muted" fontSize="lg">No open rooms right now</Text>
+            <Text color="fg.muted" fontSize="sm">Check back later or ask a teacher to open a room.</Text>
+          </VStack>
         ) : (
-          <div className="space-y-4">
+          <Stack gap={4}>
             {rooms.map((room) => (
-              <div key={room.id} className="bg-gray-800 rounded-xl p-5 flex justify-between items-center">
-                <div>
-                  <h2 className="text-white font-semibold text-lg">{room.name}</h2>
-                  {room.topic && <p className="text-gray-400 text-sm mt-1">{room.topic}</p>}
-                  {room.description && <p className="text-gray-500 text-sm mt-1">{room.description}</p>}
-                </div>
-                <button
-                  onClick={() => handleJoin(room.id)}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
-                >
-                  Join
-                </button>
-              </div>
+              <Card.Root key={room.id}>
+                <Card.Body>
+                  <Flex justify="space-between" align="center">
+                    <VStack align="start" gap={1}>
+                      <Heading size="md">{room.name}</Heading>
+                      {room.topic && <Text color="fg.muted" fontSize="sm">{room.topic}</Text>}
+                      {room.description && (
+                        <Text color="fg.muted" fontSize="sm">{room.description}</Text>
+                      )}
+                    </VStack>
+                    <Button
+                      colorPalette="magenta"
+                      onClick={() => handleJoin(room.id)}
+                      loading={joiningIds.has(room.id)}
+                    >
+                      Join
+                    </Button>
+                  </Flex>
+                </Card.Body>
+              </Card.Root>
             ))}
-          </div>
+          </Stack>
         )}
-      </div>
-    </div>
+      </VStack>
+    </Box>
   );
 }

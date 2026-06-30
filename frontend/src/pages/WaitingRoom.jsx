@@ -1,6 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { subscribeToEvents } from '../api';
+import { useColorMode } from '../hooks/useColorMode';
+import { Box, Button, Heading, IconButton, Spinner, Text, VStack } from '@chakra-ui/react';
+
+function ThemeToggle() {
+  const { mode, toggleColorMode } = useColorMode();
+  return (
+    <IconButton
+      aria-label="Toggle theme"
+      variant="ghost"
+      size="sm"
+      onClick={toggleColorMode}
+      position="fixed"
+      top={4}
+      right={4}
+      zIndex={10}
+    >
+      {mode === 'dark' ? '☀️' : '🌙'}
+    </IconButton>
+  );
+}
 
 export default function WaitingRoom() {
   const { roomId } = useParams();
@@ -27,39 +47,34 @@ export default function WaitingRoom() {
   }, [roomId]);
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-      <div className="text-center">
+    <Box minH="100vh" bg="bg.muted" display="flex" alignItems="center" justifyContent="center">
+      <ThemeToggle />
+      <VStack gap={4} textAlign="center">
         {status === 'waiting' && (
           <>
-            <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-white text-xl">Waiting for teacher to admit you...</p>
-            <p className="text-gray-400 mt-2">You'll be able to join once admitted</p>
+            <Spinner size="xl" color="magenta.500" />
+            <Heading size="lg">Waiting for teacher to admit you...</Heading>
+            <Text color="fg.muted">You&apos;ll be able to join once admitted</Text>
           </>
         )}
         {status === 'admitted' && (
           <>
-            <p className="text-green-400 text-xl">You've been admitted!</p>
-            <p className="text-gray-400 mt-2">Check the opened Zoom tab to join the meeting.</p>
-            <button
-              onClick={() => navigate('/browse')}
-              className="mt-6 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-            >
+            <Heading size="lg" color="green.400">You&apos;ve been admitted!</Heading>
+            <Text color="fg.muted">Check the opened Zoom tab to join the meeting.</Text>
+            <Button mt={4} colorPalette="magenta" onClick={() => navigate('/browse')}>
               Back to rooms
-            </button>
+            </Button>
           </>
         )}
         {status === 'declined' && (
           <>
-            <p className="text-red-400 text-xl">The teacher declined your request</p>
-            <button
-              onClick={() => navigate('/browse')}
-              className="mt-4 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-            >
+            <Heading size="lg" color="red.400">The teacher declined your request</Heading>
+            <Button mt={4} colorPalette="magenta" onClick={() => navigate('/browse')}>
               Back to rooms
-            </button>
+            </Button>
           </>
         )}
-      </div>
-    </div>
+      </VStack>
+    </Box>
   );
 }
