@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getOpenRooms, joinWaitingRoom, subscribeToEvents } from '../api';
 import { useAuth } from '../store/auth';
-import { useColorMode } from '../hooks/useColorMode';
+import { useColorMode } from '../components/ColorModeProvider';
 import {
   Box,
   Button,

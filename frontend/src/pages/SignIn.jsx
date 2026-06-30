@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { login } from '../api';
 import { useAuth } from '../store/auth';
-import { useColorMode } from '../hooks/useColorMode';
+import { useColorMode } from '../components/ColorModeProvider';
 import { Box, Button, Field, Heading, IconButton, Input, Link, Text, VStack } from '@chakra-ui/react';
 
 function ThemeToggle() {

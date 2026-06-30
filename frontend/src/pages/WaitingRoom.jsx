@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { subscribeToEvents } from '../api';
-import { useColorMode } from '../hooks/useColorMode';
+import { useColorMode } from '../components/ColorModeProvider';
 import { Box, Button, Heading, IconButton, Spinner, Text, VStack } from '@chakra-ui/react';
 
 function ThemeToggle() {

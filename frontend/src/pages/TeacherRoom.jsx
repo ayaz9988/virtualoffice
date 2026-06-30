@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMyRoom, createRoom, updateRoom, deleteRoom, getWaitingQueue, admitStudent, declineStudent, subscribeToEvents } from '../api';
 import { useAuth } from '../store/auth';
-import { useColorMode } from '../hooks/useColorMode';
+import { useColorMode } from '../components/ColorModeProvider';
 import {
   Badge,
   Box,
@@ -200,7 +200,7 @@ export default function TeacherRoom() {
                   <VStack align="start" gap={1}>
                     <Heading size="md">{room.name}</Heading>
                     {room.topic && <Text color="fg.muted" fontSize="sm">{room.topic}</Text>}
-                    <Badge colorScheme={room.is_open ? 'green' : 'gray'} mt={1}>
+                    <Badge colorPalette={room.is_open ? 'green' : 'red'} mt={1}>
                       {room.is_open ? '● Open' : '○ Closed'}
                     </Badge>
                   </VStack>
@@ -211,21 +211,21 @@ export default function TeacherRoom() {
                         href={room.zoom_start_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        colorScheme="green"
+                        colorPalette="green"
                         size="sm"
                       >
                         Desktop App
                       </Button>
                     )}
                     <Button
-                      colorPalette={room.is_open ? 'yellow' : 'magenta'}
+                      colorPalette={room.is_open ? 'red' : 'green'}
                       size="sm"
                       onClick={handleToggle}
                       loading={togglingRoom}
                     >
                       {room.is_open ? 'Close Room' : 'Open Room'}
                     </Button>
-                    <Button colorScheme="red" size="sm" onClick={handleDelete} loading={deletingRoom}>
+                    <Button colorPalette="red" size="sm" onClick={handleDelete} loading={deletingRoom}>
                       Delete
                     </Button>
                   </HStack>
@@ -257,7 +257,7 @@ export default function TeacherRoom() {
                         </VStack>
                         <HStack gap={2}>
                           <Button
-                            colorScheme="green"
+                            colorPalette="green"
                             size="sm"
                             onClick={() => handleAdmit(entry.id)}
                             loading={admittingIds.has(entry.id)}
@@ -265,7 +265,7 @@ export default function TeacherRoom() {
                             Admit
                           </Button>
                           <Button
-                            colorScheme="red"
+                            colorPalette="red"
                             size="sm"
                             onClick={() => handleDecline(entry.id)}
                             loading={decliningIds.has(entry.id)}
