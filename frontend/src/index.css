@@ -1,3 +1,11 @@
 body {
   margin: 0;
 }
+
+.dark {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+}

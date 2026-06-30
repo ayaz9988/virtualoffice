@@ -12,6 +12,10 @@ export function ColorModeProvider({ children }) {
   });
 
   useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(mode);
+    root.style.colorScheme = mode;
     localStorage.setItem(STORAGE_KEY, mode);
   }, [mode]);
 
